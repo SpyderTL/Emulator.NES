@@ -38,6 +38,12 @@ namespace dotNES.Renderers
 
         public void Draw()
         {
+			if (InvokeRequired)
+			{
+				Invoke(new Action(Draw));
+				return;
+			}
+
             _gameBitmap?.Dispose();
 
             if(_rawBitmap.IsAllocated) _rawBitmap.Free();

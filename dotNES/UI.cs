@@ -28,7 +28,7 @@ namespace dotNES
             NearestNeighbor, Linear
         }
 
-        public FilterMode _filterMode = FilterMode.Linear;
+        public FilterMode _filterMode = FilterMode.NearestNeighbor;
 
         class SeparatorItem : MenuItem
         {
@@ -61,7 +61,7 @@ namespace dotNES
         private bool suspended;
         public bool gameStarted;
 
-        private Type[] possibleRenderers = { typeof(SoftwareRenderer), /* typeof(OpenGLRenderer),  */ typeof(Direct3DRenderer) };
+        private Type[] possibleRenderers = { typeof(SoftwareRenderer),  typeof(OpenGLRenderer),  typeof(OpenVRRenderer), typeof(Direct3DRenderer) };
         private List<IRenderer> availableRenderers = new List<IRenderer>();
 
         public UI()
@@ -139,8 +139,9 @@ namespace dotNES
                         s0.Restart();
                         emu.PPU.ProcessFrame();
                         rawBitmap = emu.PPU.RawBitmap;
-                        Invoke((MethodInvoker)_renderer.Draw);
-                        s0.Stop();
+						_renderer.Draw();
+                        //Invoke((MethodInvoker)_renderer.Draw);
+						s0.Stop();
                         Thread.Sleep(Math.Max((int)(980 / 60.0 - s0.ElapsedMilliseconds), 0) / activeSpeed);
                     }
                     s.Stop();
