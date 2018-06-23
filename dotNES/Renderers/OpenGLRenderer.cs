@@ -92,7 +92,13 @@ namespace dotNES.Renderers
 
         public void Draw()
         {
-            if (_ui == null || !_ui.ready) return;
+			if (InvokeRequired)
+			{
+				Invoke(new Action(Draw));
+				return;
+			}
+
+			if (_ui == null || !_ui.ready) return;
             Invalidate();
             Update();
         }

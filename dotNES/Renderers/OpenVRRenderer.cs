@@ -428,7 +428,7 @@ namespace dotNES.Renderers
 
 					var projection = leftEyeProjection;
 					var view = Matrix.Invert(leftEyeView * head);
-					var world = Matrix.Scaling(0.5f) * Matrix.Translation(0, 1.0f, -100.0f);
+					var world = Matrix.Translation(0, 0, -100.0f);
 
 					worldViewProjection = world * view * projection;
 
@@ -513,7 +513,7 @@ namespace dotNES.Renderers
 
 					projection = rightEyeProjection;
 					view = Matrix.Invert(rightEyeView * head);
-					world = Matrix.Scaling(0.5f) * Matrix.Translation(0, 1.0f, -100.0f);
+					world = Matrix.Translation(0, 0, -100.0f);
 
 					worldViewProjection = world * view * projection;
 
@@ -588,7 +588,7 @@ namespace dotNES.Renderers
 
 					projection = Matrix.PerspectiveFovRH(3.14F / 3.0F, ratio, 0.01f, 1000);
 					view = Matrix.Invert(head);
-					world = Matrix.Scaling(0.5f) * Matrix.Translation(0, 1.0f, -100.0f);
+					world = Matrix.Translation(0, 0, -100.0f);
 
 					worldViewProjection = world * view * projection;
 
@@ -654,8 +654,8 @@ namespace dotNES.Renderers
 					if (pixel == 0)
 						continue;
 
-					matrix.M41 = x;
-					matrix.M42 = 100 - y;
+					matrix.M41 = x - 128;
+					matrix.M42 = 120 - y;
 
 					Matrix.Multiply(ref matrix, ref worldViewProjection, out matrix2);
 
