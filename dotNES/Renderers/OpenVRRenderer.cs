@@ -46,11 +46,8 @@ namespace dotNES.Renderers
 		private SharpDX.Direct3D11.DeviceContext context;
 		private RenderTargetView backBufferView;
 		private DepthStencilView depthStencilView;
-		private VertexShader controllerVertexShader;
-		private PixelShader controllerPixelShader;
-		private InputLayout controllerLayout;
-		private Matrix worldViewProjection;
-		private SharpDX.Direct3D11.Buffer worldViewProjectionBuffer;
+		private Shaders.Parameters shaderParameters;
+		private SharpDX.Direct3D11.Buffer shaderParameterBuffer;
 		private RasterizerState rasterizerState;
 		private BlendState blendState;
 		private DepthStencilState depthStencilState;
@@ -263,7 +260,8 @@ namespace dotNES.Renderers
 
 					Shapes.Cube.Load(device);
 					Shapes.Sphere.Load(device);
-					Shaders.Load(device);
+					Shaders.Normal.Load(device);
+					Shaders.NormalTexture.Load(device);
 
 					// Load Controller Models
 					foreach (var controller in controllers)
@@ -299,18 +297,7 @@ namespace dotNES.Renderers
 							controllerTextureViews[controller] = new ShaderResourceView(device, texture2d);
 					}
 
-					var controllerVertexShaderByteCode = SharpDX.D3DCompiler.ShaderBytecode.Compile(Properties.Resources.NormalTextureShader, "VS", "vs_5_0");
-					controllerVertexShader = new VertexShader(device, controllerVertexShaderByteCode);
-					controllerPixelShader = new PixelShader(device, SharpDX.D3DCompiler.ShaderBytecode.Compile(Properties.Resources.NormalTextureShader, "PS", "ps_5_0"));
-
-					controllerLayout = new InputLayout(device, SharpDX.D3DCompiler.ShaderSignature.GetInputSignature(controllerVertexShaderByteCode), new InputElement[]
-					{
-						new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-						new InputElement("NORMAL", 0, Format.R32G32B32_Float, 12, 0),
-						new InputElement("TEXCOORD", 0, Format.R32G32_Float, 24, 0)
-					});
-
-					worldViewProjectionBuffer = new SharpDX.Direct3D11.Buffer(device, Utilities.SizeOf<Matrix>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
+					shaderParameterBuffer = new SharpDX.Direct3D11.Buffer(device, Utilities.SizeOf<Shaders.Parameters>(), ResourceUsage.Default, BindFlags.ConstantBuffer, CpuAccessFlags.None, ResourceOptionFlags.None, 0);
 
 					var rasterizerStateDescription = RasterizerStateDescription.Default();
 					//rasterizerStateDescription.FillMode = FillMode.Wireframe;
@@ -415,7 +402,7 @@ namespace dotNES.Renderers
 					context.ClearRenderTargetView(leftEyeTextureView, backgroundColor);
 					context.ClearDepthStencilView(eyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
 
-					Shaders.Apply(context);
+					Shaders.Normal.Apply(context);
 
 					context.Rasterizer.State = rasterizerState;
 
@@ -430,13 +417,14 @@ namespace dotNES.Renderers
 					var view = Matrix.Invert(leftEyeView * head);
 					var world = Matrix.Translation(0, 0, -100.0f);
 
-					worldViewProjection = world * view * projection;
+					var worldViewProjection = world * view * projection;
 
-					context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+					//context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
 
-					context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+					context.VertexShader.SetConstantBuffer(0, shaderParameterBuffer);
+					context.PixelShader.SetConstantBuffer(0, shaderParameterBuffer);
 
-					Shapes.Cube.Begin(context);
+					//Shapes.Cube.Begin(context);
 					//Shapes.Cube.Draw(context);
 
 					//Shapes.Sphere.Begin(context);
@@ -445,14 +433,9 @@ namespace dotNES.Renderers
 					DrawPixels(worldViewProjection);
 
 					// Draw Controllers
-					context.InputAssembler.InputLayout = controllerLayout;
 					context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-					context.VertexShader.Set(controllerVertexShader);
-					context.PixelShader.Set(controllerPixelShader);
-					context.GeometryShader.Set(null);
-					context.DomainShader.Set(null);
-					context.HullShader.Set(null);
+					Shaders.NormalTexture.Apply(context);
 
 					context.PixelShader.SetSampler(0, samplerState);
 
@@ -465,11 +448,13 @@ namespace dotNES.Renderers
 
 						Convert(ref currentPoses[controller].mDeviceToAbsoluteTracking, ref world);
 
-						worldViewProjection = world * view * projection;
+						shaderParameters.WorldViewProjection = world * view * projection;
+						shaderParameters.Diffuse = new Vector4(1, 1, 1, 1);
 
-						context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+						context.UpdateSubresource(ref shaderParameters, shaderParameterBuffer);
 
-						context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+						context.VertexShader.SetConstantBuffer(0, shaderParameterBuffer);
+						context.PixelShader.SetConstantBuffer(0, shaderParameterBuffer);
 
 						context.DrawIndexed((int)controllerModels[controller].unTriangleCount * 3 * 4, 0, 0);
 					}
@@ -502,7 +487,7 @@ namespace dotNES.Renderers
 					context.ClearRenderTargetView(rightEyeTextureView, backgroundColor);
 					context.ClearDepthStencilView(eyeDepthView, DepthStencilClearFlags.Depth, 1.0f, 0);
 
-					Shaders.Apply(context);
+					Shaders.Normal.Apply(context);
 
 					context.Rasterizer.State = rasterizerState;
 
@@ -517,11 +502,12 @@ namespace dotNES.Renderers
 
 					worldViewProjection = world * view * projection;
 
-					context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+					//context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
 
-					context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+					context.VertexShader.SetConstantBuffer(0, shaderParameterBuffer);
+					context.PixelShader.SetConstantBuffer(0, shaderParameterBuffer);
 
-					Shapes.Cube.Begin(context);
+					//Shapes.Cube.Begin(context);
 					//Shapes.Cube.Draw(context);
 
 					//Shapes.Sphere.Begin(context);
@@ -530,14 +516,9 @@ namespace dotNES.Renderers
 					DrawPixels(worldViewProjection);
 
 					// Draw Controllers
-					context.InputAssembler.InputLayout = controllerLayout;
 					context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-					context.VertexShader.Set(controllerVertexShader);
-					context.PixelShader.Set(controllerPixelShader);
-					context.GeometryShader.Set(null);
-					context.DomainShader.Set(null);
-					context.HullShader.Set(null);
+					Shaders.NormalTexture.Apply(context);
 
 					context.PixelShader.SetSampler(0, samplerState);
 
@@ -550,11 +531,13 @@ namespace dotNES.Renderers
 
 						Convert(ref currentPoses[controller].mDeviceToAbsoluteTracking, ref world);
 
-						worldViewProjection = world * view * projection;
+						shaderParameters.WorldViewProjection = world * view * projection;
+						shaderParameters.Diffuse = new Vector4(1, 1, 1, 1);
 
-						context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+						context.UpdateSubresource(ref shaderParameters, shaderParameterBuffer);
 
-						context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+						context.VertexShader.SetConstantBuffer(0, shaderParameterBuffer);
+						context.PixelShader.SetConstantBuffer(0, shaderParameterBuffer);
 
 						context.DrawIndexed((int)controllerModels[controller].unTriangleCount * 3 * 4, 0, 0);
 					}
@@ -575,7 +558,7 @@ namespace dotNES.Renderers
 					context.ClearRenderTargetView(backBufferView, backgroundColor);
 					context.ClearDepthStencilView(depthStencilView, DepthStencilClearFlags.Depth, 1.0f, 0);
 
-					Shaders.Apply(context);
+					Shaders.Normal.Apply(context);
 
 					context.Rasterizer.State = rasterizerState;
 
@@ -592,11 +575,12 @@ namespace dotNES.Renderers
 
 					worldViewProjection = world * view * projection;
 
-					context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+					//context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
 
-					context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+					context.VertexShader.SetConstantBuffer(0, shaderParameterBuffer);
+					context.PixelShader.SetConstantBuffer(0, shaderParameterBuffer);
 
-					Shapes.Cube.Begin(context);
+					//Shapes.Cube.Begin(context);
 					//Shapes.Cube.Draw(context);
 
 					//Shapes.Sphere.Begin(context);
@@ -605,14 +589,9 @@ namespace dotNES.Renderers
 					DrawPixels(worldViewProjection);
 
 					// Draw Controllers
-					context.InputAssembler.InputLayout = controllerLayout;
 					context.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
 
-					context.VertexShader.Set(controllerVertexShader);
-					context.PixelShader.Set(controllerPixelShader);
-					context.GeometryShader.Set(null);
-					context.DomainShader.Set(null);
-					context.HullShader.Set(null);
+					Shaders.NormalTexture.Apply(context);
 
 					context.PixelShader.SetSampler(0, samplerState);
 
@@ -623,11 +602,13 @@ namespace dotNES.Renderers
 
 						Convert(ref currentPoses[controller].mDeviceToAbsoluteTracking, ref world);
 
-						worldViewProjection = world * view * projection;
+						shaderParameters.WorldViewProjection = world * view * projection;
+						shaderParameters.Diffuse = new Vector4(1, 1, 1, 1);
 
-						context.UpdateSubresource(ref worldViewProjection, worldViewProjectionBuffer);
+						context.UpdateSubresource(ref shaderParameters, shaderParameterBuffer);
 
-						context.VertexShader.SetConstantBuffer(0, worldViewProjectionBuffer);
+						context.VertexShader.SetConstantBuffer(0, shaderParameterBuffer);
+						context.PixelShader.SetConstantBuffer(0, shaderParameterBuffer);
 
 						context.DrawIndexed((int)controllerModels[controller].unTriangleCount * 3 * 4, 0, 0);
 					}
@@ -641,9 +622,10 @@ namespace dotNES.Renderers
 		private void DrawPixels(Matrix worldViewProjection)
 		{
 			Matrix matrix = Matrix.Identity;
-			Matrix matrix2;
 
 			uint index = 0;
+
+			Shapes.Cube.Begin(context);
 
 			for (int y = 0; y < UI.GameHeight; y++)
 			{
@@ -657,9 +639,11 @@ namespace dotNES.Renderers
 					matrix.M41 = x - 128;
 					matrix.M42 = 120 - y;
 
-					Matrix.Multiply(ref matrix, ref worldViewProjection, out matrix2);
+					Matrix.Multiply(ref matrix, ref worldViewProjection, out shaderParameters.WorldViewProjection);
 
-					context.UpdateSubresource(ref matrix2, worldViewProjectionBuffer);
+					shaderParameters.Diffuse = SharpDX.Color.FromBgra(pixel).ToVector4();
+	
+					context.UpdateSubresource(ref shaderParameters, shaderParameterBuffer);
 
 					Shapes.Cube.Draw(context);
 				}
