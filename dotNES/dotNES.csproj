@@ -118,6 +118,16 @@
     <Compile Include="Mappers\Jaleco.cs" />
     <Compile Include="Mappers\Nina003006.cs" />
     <Compile Include="openvr_api.cs" />
+    <Compile Include="APU.Core.cs">
+      <DependentUpon>APU.cs</DependentUpon>
+    </Compile>
+    <Compile Include="APU.cs" />
+    <Compile Include="APU.Memory.cs">
+      <DependentUpon>APU.cs</DependentUpon>
+    </Compile>
+    <Compile Include="APU.Registers.cs">
+      <DependentUpon>APU.cs</DependentUpon>
+    </Compile>
     <Compile Include="Renderers\OpenVRRenderer.cs">
       <SubType>Component</SubType>
     </Compile>

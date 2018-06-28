@@ -20,9 +20,11 @@ namespace dotNES
 
         public readonly CPU CPU;
 
-        public readonly PPU PPU;
+		public readonly PPU PPU;
 
-        public readonly BaseMapper Mapper;
+		public readonly APU APU;
+
+		public readonly BaseMapper Mapper;
 
         public readonly Cartridge Cartridge;
 
@@ -37,6 +39,7 @@ namespace dotNES
             Mapper = (BaseMapper)Activator.CreateInstance(Mappers[Cartridge.MapperNumber].Key, this);
             CPU = new CPU(this);
             PPU = new PPU(this);
+			APU = new APU(this);
             Controller = controller;
 
             Load();

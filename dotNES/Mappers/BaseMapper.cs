@@ -43,13 +43,17 @@ namespace dotNES.Mappers
 
         }
 
-        public virtual void InitializeMemoryMap(PPU ppu)
-        {
-            ppu.MapReadHandler(0x0000, 0x1FFF, addr => _chrROM[addr]);
-            ppu.MapWriteHandler(0x0000, 0x1FFF, (addr, val) => _chrROM[addr] = val);
-        }
+		public virtual void InitializeMemoryMap(PPU ppu)
+		{
+			ppu.MapReadHandler(0x0000, 0x1FFF, addr => _chrROM[addr]);
+			ppu.MapWriteHandler(0x0000, 0x1FFF, (addr, val) => _chrROM[addr] = val);
+		}
 
-        public virtual void ProcessCycle(int scanline, int cycle)
+		public virtual void InitializeMemoryMap(APU apu)
+		{
+		}
+
+		public virtual void ProcessCycle(int scanline, int cycle)
         {
 
         }

@@ -123,13 +123,21 @@ namespace dotNES
 
             MapReadHandler(0x0000, 0x1FFF, addr => _ram[addr & 0x07FF]);
             MapReadHandler(0x2000, 0x3FFF, addr => _emulator.PPU.ReadRegister((addr & 0x7) - 0x2000));
-            MapReadHandler(0x4000, 0x4017, ReadIORegister);
+            MapReadHandler(0x4000, 0x4013, addr => _emulator.APU.ReadRegister(addr - 0x4000));
+			MapReadHandler(0x4014, 0x4014, ReadIORegister);
+            MapReadHandler(0x4015, 0x4015, addr => _emulator.APU.ReadRegister(addr - 0x4000));
+			MapReadHandler(0x4016, 0x4016, ReadIORegister);
+			MapReadHandler(0x4017, 0x4017, addr => _emulator.APU.ReadRegister(addr - 0x4000));
 
-            MapWriteHandler(0x0000, 0x1FFF, (addr, val) => _ram[addr & 0x07FF] = val);
-            MapWriteHandler(0x2000, 0x3FFF, (addr, val) => _emulator.PPU.WriteRegister((addr & 0x7) - 0x2000, val));
-            MapWriteHandler(0x4000, 0x401F, WriteIORegister);
+			MapWriteHandler(0x0000, 0x1FFF, (addr, val) => _ram[addr & 0x07FF] = val);
+			MapWriteHandler(0x2000, 0x3FFF, (addr, val) => _emulator.PPU.WriteRegister((addr & 0x7) - 0x2000, val));
+			MapWriteHandler(0x4000, 0x4013, (addr, val) => _emulator.APU.WriteRegister(addr - 0x4000, val));
+			MapWriteHandler(0x4014, 0x4014, WriteIORegister);
+			MapWriteHandler(0x4015, 0x4015, (addr, val) => _emulator.APU.WriteRegister(addr - 0x4000, val));
+			MapWriteHandler(0x4016, 0x4016, WriteIORegister);
+			MapWriteHandler(0x4017, 0x4017, (addr, val) => _emulator.APU.WriteRegister(addr - 0x4000, val));
 
-            _emulator.Mapper.InitializeMemoryMap(this);
+			_emulator.Mapper.InitializeMemoryMap(this);
         }
     }
 }
