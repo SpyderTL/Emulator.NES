@@ -49,7 +49,6 @@
             this.DragDrop += new System.Windows.Forms.DragEventHandler(this.UI_DragDrop);
             this.DragEnter += new System.Windows.Forms.DragEventHandler(this.UI_DragEnter);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.UI_KeyDown);
-            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.UI_KeyUp);
             this.MouseClick += new System.Windows.Forms.MouseEventHandler(this.UI_MouseClick);
             this.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.UI_PreviewKeyDown);
             this.ResumeLayout(false);

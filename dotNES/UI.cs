@@ -15,7 +15,7 @@ namespace dotNES
     {
         private bool _rendererRunning = true;
         private Thread _renderThread;
-        private IController _controller = new NES001Controller();
+        private INESController _controller = new NES001Controller();
 
         public const int GameWidth = 256;
         public const int GameHeight = 240;
@@ -60,16 +60,21 @@ namespace dotNES
         private Emulator emu;
         private bool suspended;
         public bool gameStarted;
+		private IController controller;
 
-        private Type[] possibleRenderers = { typeof(SoftwareRenderer),  typeof(OpenGLRenderer),  /*typeof(OpenVRRenderer), */typeof(Direct3DRenderer) };
+        private Type[] possibleRenderers = { typeof(SoftwareRenderer),  typeof(OpenGLRenderer), /*typeof(OpenVRRenderer),*/ typeof(Direct3DRenderer) };
         private List<IRenderer> availableRenderers = new List<IRenderer>();
 
         public UI()
         {
             InitializeComponent();
 
+			ClientSize = new Size(GameWidth * 2, GameHeight * 2);
+
             FindRenderers();
             SetRenderer(availableRenderers.Last());
+
+			controller = new KeyboardController();
         }
 
         private void SetRenderer(IRenderer renderer)
@@ -80,7 +85,6 @@ namespace dotNES
             {
                 var oldCtrl = (Control)renderer;
                 oldCtrl.MouseClick -= UI_MouseClick;
-                oldCtrl.KeyUp -= UI_KeyUp;
                 oldCtrl.KeyDown -= UI_KeyDown;
                 oldCtrl.PreviewKeyDown -= UI_PreviewKeyDown;
                 _renderer.EndRendering();
@@ -91,7 +95,6 @@ namespace dotNES
             ctrl.Dock = DockStyle.Fill;
             ctrl.TabStop = false;
             ctrl.MouseClick += UI_MouseClick;
-            ctrl.KeyUp += UI_KeyUp;
             ctrl.KeyDown += UI_KeyDown;
             ctrl.PreviewKeyDown += UI_PreviewKeyDown;
             Controls.Add(ctrl);
@@ -137,6 +140,8 @@ namespace dotNES
                     for (int i = 0; i < 60 && !suspended; i++)
                     {
                         s0.Restart();
+						((NES001Controller)emu.Controller).State = NES001Controller.Buttons.None;
+						controller.Update(emu.Controller);
                         emu.PPU.ProcessFrame();
                         rawBitmap = emu.PPU.RawBitmap;
 						_renderer.Draw();
@@ -193,15 +198,7 @@ namespace dotNES
                 case Keys.F3:
                     suspended = true;
                     break;
-                default:
-                    _controller.PressKey(e);
-                    break;
             }
-        }
-
-        private void UI_KeyUp(object sender, KeyEventArgs e)
-        {
-            _controller.ReleaseKey(e);
         }
 
         private void UI_MouseClick(object sender, MouseEventArgs e)

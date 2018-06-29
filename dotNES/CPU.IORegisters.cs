@@ -17,11 +17,14 @@ namespace dotNES
                 case 0x4014: // OAM DMA
                     _emulator.PPU.PerformDMA(val);
                     break;
-                case 0x4016:
-                    _emulator.Controller.Strobe(val == 1);
-                    break;
-            }
-            if (reg <= 0x401F) return; // APU write
+				case 0x4016:
+					_emulator.Controller.Write(val);
+					break;
+				case 0x4017:
+					//_emulator.Controller2.Write(val);
+					break;
+			}
+			if (reg <= 0x401F) return; // APU write
             throw new NotImplementedException($"{reg.ToString("X4")} = {val.ToString("X2")}");
         }
 
@@ -30,7 +33,7 @@ namespace dotNES
             switch (reg)
             {
                 case 0x4016:
-                    return (uint) _emulator.Controller.ReadState() & 0x1;
+                    return _emulator.Controller.Read();
             }
             return 0x00;
             //throw new NotImplementedException();

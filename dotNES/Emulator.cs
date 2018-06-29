@@ -16,7 +16,7 @@ namespace dotNES
                                                                  select new { def, type }).ToDictionary(a => a.def.Id, a => new KeyValuePair<Type, MapperDef>(a.type, a.def));
 
 
-        public IController Controller;
+        public INESController Controller;
 
         public readonly CPU CPU;
 
@@ -30,7 +30,7 @@ namespace dotNES
 
         private readonly string _path;
 
-        public Emulator(string path, IController controller)
+        public Emulator(string path, INESController controller)
         {
             _path = path;
             Cartridge = new Cartridge(path);

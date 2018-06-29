@@ -1,15 +1,13 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace dotNES.Controllers
 {
-    interface IController
-    {
-        void Strobe(bool on);
-
-        int ReadState();
-
-        void PressKey(KeyEventArgs e);
-
-        void ReleaseKey(KeyEventArgs e);
-    }
+	interface IController
+	{
+		void Update(INESController controller);
+	}
 }

@@ -320,13 +320,16 @@ namespace dotNES
 
             _emulator.Mapper.ProcessCycle(scanline, cycle);
 
-            if (_cpuSyncCounter + 1 == 3)
+			_cpuSyncCounter++;
+
+            if (_cpuSyncCounter == 3)
             {
                 if (F.VBlankStarted) _cpuClocksSinceVBL++;
                 _emulator.CPU.TickFromPPU();
                 _cpuSyncCounter = 0;
+
+				_emulator.APU.TickFromPPU();
             }
-            else _cpuSyncCounter++;
         }
     }
 }

@@ -4,56 +4,41 @@ using System.Windows.Forms;
 
 namespace dotNES.Controllers
 {
-    class NES001Controller : IController
-    {
-        private int data;
-        private int serialData;
-        private bool strobing;
+	public class NES001Controller : INESController
+	{
+		public Buttons State = Buttons.None;
 
-        public bool debug;
-        // bit:   	 7     6     5     4     3     2     1     0
-        // button:	 A B  Select Start  Up Down  Left 
+		private int serialData;
+		private bool strobing;
 
-        private readonly Dictionary<Keys, int> _keyMapping = new Dictionary<Keys, int>
-        {
-            {Keys.A, 7},
-            {Keys.S, 6},
-            {Keys.RShiftKey, 5},
-            {Keys.Enter, 4},
-            {Keys.Up, 3},
-            {Keys.Down, 2},
-            {Keys.Left, 1},
-            {Keys.Right, 0},
-        };
+		public void Write(byte val)
+		{
+			serialData = (int)State;
+			strobing = (val & 0x01) != 0;
+		}
 
-        public void Strobe(bool on)
-        {
-            serialData = data;
-            strobing = on;
-        }
+		public byte Read()
+		{
+			byte ret = (byte)(serialData & 0x01);
 
-        public int ReadState()
-        {
-            int ret = ((serialData & 0x80) > 0).AsByte();
-            if (!strobing)
-            {
-                serialData <<= 1;
-                serialData &= 0xFF;
-            }
-            return ret;
-        }
+			if (!strobing)
+				serialData >>= 1;
 
-        public void PressKey(KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.P) debug ^= true;
-            if (!_keyMapping.ContainsKey(e.KeyCode)) return;
-            data |= 1 << _keyMapping[e.KeyCode];
-        }
+			return ret;
+		}
 
-        public void ReleaseKey(KeyEventArgs e)
-        {
-            if (!_keyMapping.ContainsKey(e.KeyCode)) return;
-            data &= ~(1 << _keyMapping[e.KeyCode]);
-        }
-    }
+		[Flags]
+		public enum Buttons
+		{
+			None = 0,
+			A = 1,
+			B = 2,
+			Select = 4,
+			Start = 8,
+			Up = 16,
+			Down = 32,
+			Left = 64,
+			Right = 128
+		}
+	}
 }
