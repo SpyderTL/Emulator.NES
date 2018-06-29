@@ -105,6 +105,7 @@
     <Compile Include="Cartridge.cs" />
     <Compile Include="Controllers\IController.cs" />
     <Compile Include="Controllers\INESController.cs" />
+    <Compile Include="Controllers\JoystickController.cs" />
     <Compile Include="Controllers\KeyboardController.cs" />
     <Compile Include="CPU.Core.cs">
       <DependentUpon>CPU.cs</DependentUpon>
