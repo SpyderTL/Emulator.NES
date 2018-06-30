@@ -51,19 +51,23 @@ namespace dotNES
 			switch (reg)
 			{
 				case 0x0003:
-					timers[0] = timerValues[val >> 3] * 10000;
+					timers[0] = timerValues[val >> 3] * 5000;
 					break;
 
 				case 0x0007:
-					timers[1] = timerValues[val >> 3] * 10000;
+					timers[1] = timerValues[val >> 3] * 5000;
+					break;
+
+				case 0x0008:
+					timers[4] = val & 0x7f * 5000;
 					break;
 
 				case 0x000b:
-					timers[2] = timerValues[val >> 3] * 10000;
+					timers[2] = timerValues[val >> 3] * 5000;
 					break;
 
 				case 0x000f:
-					timers[3] = timerValues[val >> 3] * 10000;
+					timers[3] = timerValues[val >> 3] * 5000;
 					break;
 			}
 

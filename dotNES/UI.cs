@@ -74,10 +74,10 @@ namespace dotNES
             FindRenderers();
             SetRenderer(availableRenderers.Last());
 
-			var joysticks = JoystickController.GetJoysticks();
+			var joysticks = GamePadController.GetJoysticks();
 
 			if (joysticks.Count != 0)
-				controller = new JoystickController(joysticks[0].InstanceGuid);
+				controller = new GamePadController(joysticks[0].InstanceGuid);
 			else
 				controller = new KeyboardController();
         }

@@ -4,11 +4,7 @@ using SharpDX;
 using SharpDX.Direct3D;
 using SharpDX.Direct3D11;
 using SharpDX.DXGI;
-using AlphaMode = SharpDX.Direct2D1.AlphaMode;
-using Device = SharpDX.Direct3D11.Device;
-using Factory = SharpDX.DXGI.Factory;
 using SharpDX.Mathematics.Interop;
-using Resource = SharpDX.Direct3D11.Resource;
 using Valve.VR;
 using System.Collections.Generic;
 using System.Drawing;
@@ -77,7 +73,7 @@ namespace dotNES.Renderers
 				system = OpenVR.Init(ref initError);
 
 				if (initError != EVRInitError.None)
-					return;
+					throw new Exception("Not Available");
 
 				compositor = OpenVR.Compositor;
 

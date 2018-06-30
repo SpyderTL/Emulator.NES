@@ -15,6 +15,7 @@ namespace dotNES
 			device.StartEngine();
 
 			master = new MasteringVoice(device);
+			//master.SetVolume(0.1f);
 
 			format = new WaveFormat(44100, 16, 1);
 
@@ -43,17 +44,40 @@ namespace dotNES
 
 		internal void TickFromPPU()
 		{
-			for (var timer = 0; timer < timers.Length; timer++)
-				if (timers[timer] > 0)
-					timers[timer]--;
+			//for (var timer = 0; timer < timers.Length; timer++)
+			//	if (timers[timer] > 0)
+			//		timers[timer]--;
+
+			if (timers[0] > 0 &&
+				(Registers[0x00] & 0x20) == 0)
+				timers[0]--;
+
+			if (timers[1] > 0 &&
+				(Registers[0x04] & 0x20) == 0)
+				timers[1]--;
+
+			if (timers[2] > 0 &&
+				(Registers[0x08] & 0x80) == 0)
+				timers[2]--;
+
+			if (timers[3] > 0 &&
+				(Registers[0x0c] & 0x20) == 0)
+				timers[3]--;
+
+			if (timers[4] > 0 &&
+				(Registers[0x08] & 0x80) == 0)
+				timers[4]--;
 		}
 
 		private void Source_BufferEnd(IntPtr obj)
 		{
 			for (int x = 0; x < data.Length; x += 2)
 			{
-				var value = 0d;
-				var count = 0;
+				var pulse = 0d;
+				var pulse2 = 0d;
+				var triangle = 0d;
+				var noise = 0d;
+				var delta = 0d;
 
 				if ((Registers[0x15] & 1) != 0)
 				{
@@ -62,10 +86,7 @@ namespace dotNES
 					var frequency2 = 1789773.0 / (16 * (frequency + 1));
 
 					if (frequency >= 8 && timers[0] > 0)
-					{
-						value += Math.Sin(time * Math.PI * frequency2 * 2.0);
-						count++;
-					}
+						pulse = Waves.Square(time, frequency2, 0);
 				}
 
 				if ((Registers[0x15] & 2) != 0)
@@ -75,23 +96,17 @@ namespace dotNES
 					var frequency2 = 1789773.0 / (16 * (frequency + 1));
 
 					if (frequency >= 8 && timers[1] > 0)
-					{
-						value += Math.Sin(time * Math.PI * frequency2 * 2.0);
-						count++;
-					}
+						pulse2 = Waves.Square(time, frequency2, 0);
 				}
 
 				if ((Registers[0x15] & 4) != 0)
 				{
 					var frequency = Registers[0x0a] | ((Registers[0x0b] & 0x07) << 8);
 
-					var frequency2 = 1789773.0 / (16 * (frequency + 1));
+					var frequency2 = 1789773.0 / (32 * (frequency + 1));
 
-					if (frequency >= 8 && timers[2] > 0)
-					{
-						value += Math.Sin(time * Math.PI * frequency2 * 2.0);
-						count++;
-					}
+					if (timers[2] > 0 && timers[4] > 0)
+						triangle = Waves.Triangle(time, frequency2, 0);
 				}
 
 				if ((Registers[0x15] & 8) != 0)
@@ -100,14 +115,11 @@ namespace dotNES
 
 					var frequency2 = 1789773.0 / (16 * (frequency + 1));
 
-					if (frequency >= 8 && timers[3] > 0)
-					{
-						value += (random.NextDouble() * 2.0) - 1.0;
-						count++;
-					}
+					if (timers[3] > 0)
+						noise = (random.NextDouble() * 2.0) - 1.0;
 				}
 
-				var value2 = (short)((value / count) * short.MaxValue);
+				var value2 = (short)((((pulse + pulse2) * 0.0752) + (triangle * 0.0851) + (noise * 0.0494) + (delta * 0.0335)) * short.MaxValue);
 
 				data[x] = (byte)(value2 & 0xff);
 				data[x + 1] = (byte)(value2 >> 8);
